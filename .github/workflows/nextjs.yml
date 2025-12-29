@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ENDER GODS: SUPREME CONTROL | BY AKIRA_YR</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --p: #bc13fe; --dark: #05000a; --gold: #ffd700; --red: #ff3333;
+            --glass: rgba(188, 19, 254, 0.1); --green: #00ff88; --premium: #00d4ff;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Orbitron', sans-serif; user-select: none; }
+        body { background: var(--dark); color: white; overflow: hidden; height: 100vh; }
+
+        /* --- MENU --- */
+        #overlay { position: fixed; inset: 0; z-index: 1000; background: radial-gradient(circle, #1a002b, #05000a); display: flex; align-items: center; justify-content: center; }
+        .card { background: rgba(255,255,255,0.05); padding: 25px; border-radius: 20px; border: 1px solid var(--p); text-align: center; width: 320px; }
+        select, input { width: 100%; padding: 10px; margin-top: 10px; background: rgba(0,0,0,0.5); border: 1px solid var(--p); color: white; border-radius: 8px; text-align: center; }
+
+        /* --- JOGO --- */
+        #game-ui { display: none; height: 100vh; flex-direction: row; }
+        .players-bar { width: 90px; background: rgba(0,0,0,0.8); border-right: 1px solid var(--p); padding: 10px; z-index: 5; }
+        .p-item { font-size: 0.45rem; padding: 6px; border-radius: 5px; margin-bottom: 8px; border: 1px solid var(--p); background: var(--glass); }
+        .p-item.me { border-color: var(--green); color: var(--green); }
+
+        .universe { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; gap: 10px; }
+        
+        /* BOTÕES DE CONTROLE CENTRAL */
+        .btn-center {
+            border: 1px solid var(--p); color: white;
+            padding: 8px 15px; border-radius: 20px; font-size: 0.5rem;
+            cursor: pointer; transition: 0.3s; font-weight: bold; z-index: 10;
+            width: 140px; text-align: center;
+        }
+
+        #quick-rb-btn { background: rgba(255, 215, 0, 0.1); border-color: var(--gold); color: var(--gold); display: none; }
+        #quick-rb-btn.ready { background: var(--gold); color: black; box-shadow: 0 0 15px var(--gold); display: block; }
+
+        #autobuy-btn { background: #222; }
+        #autobuy-btn.active { background: var(--green); color: black; box-shadow: 0 0 15px var(--green); }
+        #autobuy-btn.premium { border-color: var(--premium); color: var(--premium); }
+        #autobuy-btn.premium.active { background: var(--premium); }
+
+        /* CRISTAL E PET */
+        .crystal-wrap { position: relative; width: 180px; height: 180px; display: flex; align-items: center; justify-content: center; }
+        .crystal {
+            width: 80px; height: 120px; background: var(--p);
+            clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+            filter: drop-shadow(0 0 25px var(--p)); animation: float 3s ease-in-out infinite;
+            cursor: pointer; border: 2px solid white; transition: 0.1s; z-index: 2;
+        }
+        
+        #ender-pet {
+            position: absolute; width: 40px; height: 40px; background: #fff;
+            border-radius: 50%; border: 3px solid var(--p);
+            box-shadow: 0 0 20px var(--p); display: none;
+            z-index: 3; transition: 0.1s; pointer-events: none;
+        }
+        #ender-pet::after { content: '👁️'; font-size: 18px; display: flex; justify-content: center; align-items: center; height: 100%; }
+
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+
+        /* LOJA */
+        .shop { width: 160px; background: rgba(0,0,0,0.9); border-left: 1px solid var(--p); display: flex; flex-direction: column; }
+        .shop-items { flex: 1; overflow-y: auto; padding: 10px; }
+        .up-card {
+            background: var(--glass); padding: 8px; border-radius: 8px; margin-bottom: 8px;
+            border: 1px solid transparent; cursor: pointer;
+        }
+        .up-card.ready { border-color: var(--green); }
+        .up-card h5 { font-size: 0.45rem; color: #eee; }
+        .up-card .price { font-size: 0.45rem; color: var(--gold); }
+
+        .shop-footer { padding: 10px; }
+        .btn-exit { background: var(--red); color: white; border: none; width: 100%; padding: 8px; border-radius: 5px; font-size: 0.5rem; cursor: pointer; }
+
+        #score-val { font-size: 2.2rem; font-weight: 900; text-shadow: 0 0 15px var(--p); }
+        #premium-alert { color: var(--premium); font-size: 0.4rem; font-weight: bold; display: none; text-shadow: 0 0 5px var(--premium); margin-bottom: 5px;}
+    </style>
+</head>
+<body>
+
+    <div id="overlay">
+        <div class="card">
+            <h1 style="color:var(--p); font-size: 1.5rem;">ENDER GODS</h1>
+            <input type="text" id="name" placeholder="NICK DO DEUS">
+            <input type="text" id="room" placeholder="CÓDIGO DA SALA">
+            <select id="diff-sel">
+                <option value="1.2">FÁCIL</option>
+                <option value="1.5">MÉDIO</option>
+                <option value="2.0">DIFÍCIL</option>
+            </select>
+            <button style="background:var(--p); color:white; border:none; padding:15px; width:100%; border-radius:10px; margin-top:15px; font-weight:bold; cursor:pointer;" onclick="start()">ENTRAR</button>
+        </div>
+    </div>
+
+    <div id="game-ui">
+        <div class="players-bar" id="lb"></div>
+        <div class="universe">
+            <div id="premium-alert">💎 SUPER AUTO BUY ATIVADO 💎</div>
+            <div style="text-align: center;">
+                <p style="font-size: 0.5rem; color: var(--p);">ENERGIA</p>
+                <div id="score-val">0</div>
+            </div>
+
+            <button id="quick-rb-btn" class="btn-center" onclick="buyRB()">REBIRTH DISPONÍVEL!</button>
+            <button id="autobuy-btn" class="btn-center" onclick="toggleAuto()">AUTO-BUY: OFF</button>
+
+            <div class="crystal-wrap">
+                <div id="ender-pet"></div>
+                <div class="crystal" onclick="clickGem()"></div>
+            </div>
+
+            <div id="rb-txt" style="font-size: 0.6rem; color: var(--gold); font-weight: 900;">LEVEL ASCENSÃO: 0</div>
+        </div>
+
+        <div class="shop">
+            <div class="shop-items" id="shop-content"></div>
+            <div class="shop-footer"><button class="btn-exit" onclick="location.reload()">SAIR</button></div>
+        </div>
+    </div>
+
+    <script>
+        let score = 0, dpc = 1, dps = 0, rb = 0, rbMult = 1, diff = 1.2;
+        let pName, roomCode, autoBuy = false, isPremium = false;
+        let petActive = false, autoClickRate = 0;
+
+        const baseUpgrades = [
+            { n: "Dedo Ender", p: 15, dpc: 2, dps: 0 },
+            { n: "Servo Vazio", p: 150, dpc: 0, dps: 15 },
+            { n: "Auto-Clicker", p: 500, auto: 1 },
+            { n: "Ender Pet 👁️", p: 2500, isPet: true },
+            { n: "Garra Ferrari", p: 8000, dpc: 10, dps: 0 },
+            { n: "Portal Farm", p: 50000, dpc: 0, dps: 5000 },
+            { n: "REBIRTH ⭐", isRB: true }
+        ];
+
+        let upgrades = JSON.parse(JSON.stringify(baseUpgrades));
+
+        function start() {
+            pName = document.getElementById('name').value || "God";
+            roomCode = document.getElementById('room').value || "000";
+            diff = parseFloat(document.getElementById('diff-sel').value);
+            document.getElementById('overlay').style.display = 'none';
+            document.getElementById('game-ui').style.display = 'flex';
+            renderShop();
+            setInterval(loop, 100);
+            setInterval(petLoop, 300);
+        }
+
+        function loop() {
+            score += (dps * rbMult) / 10;
+            if(autoClickRate > 0) score += (autoClickRate * dpc * rbMult) / 10;
+            
+            if(!isPremium && score >= 50000) {
+                isPremium = true;
+                document.getElementById('premium-alert').style.display = 'block';
+                document.getElementById('autobuy-btn').classList.add('premium');
+            }
+
+            if(autoBuy) upgrades.forEach((u, i) => { if(!u.isRB && score >= getCost(u, i)) buy(i); });
+            
+            updateUI();
+            sync();
+        }
+
+        function petLoop() {
+            if(!petActive) return;
+            const pet = document.getElementById('ender-pet');
+            pet.style.transform = `translate(${Math.random()*40-20}px, ${Math.random()*40-20}px) scale(1.1)`;
+            score += dpc * rbMult;
+            setTimeout(() => pet.style.transform = `translate(0,0) scale(1)`, 100);
+        }
+
+        function clickGem() { score += dpc * rbMult; }
+
+        function toggleAuto() {
+            autoBuy = !autoBuy;
+            document.getElementById('autobuy-btn').classList.toggle('active');
+            document.getElementById('autobuy-btn').innerText = (isPremium?"SUPER ":"")+"AUTO: "+(autoBuy?"ON":"OFF");
+        }
+
+        function getCost(u, i) { return u.isRB ? Math.pow(10, 5 + rb) : u.p; }
+
+        function buyRB() {
+            const rbIndex = upgrades.findIndex(u => u.isRB);
+            buy(rbIndex);
+        }
+
+        function buy(i) {
+            let u = upgrades[i];
+            let cost = getCost(u, i);
+            if(score >= cost) {
+                score -= cost;
+                if(u.isRB) {
+                    rb++; rbMult *= 10; score = 0; dpc = 1; dps = 0; autoClickRate = 0; petActive = false;
+                    document.getElementById('ender-pet').style.display = 'none';
+                    upgrades = JSON.parse(JSON.stringify(baseUpgrades));
+                } else { 
+                    if(u.dpc) dpc *= u.dpc; 
+                    if(u.dps) dps += u.dps;
+                    if(u.auto) autoClickRate += u.auto;
+                    if(u.isPet) { petActive = true; document.getElementById('ender-pet').style.display = 'block'; }
+                    u.p = Math.floor(u.p * diff); 
+                }
+                renderShop();
+            }
+        }
+
+        function renderShop() {
+            const container = document.getElementById('shop-content');
+            container.innerHTML = "";
+            upgrades.forEach((u, i) => {
+                container.innerHTML += `
+                    <div class="up-card" id="up-${i}" onclick="buy(${i})">
+                        <h5>${u.n}</h5>
+                        <div class="price">$ ${format(getCost(u, i))}</div>
+                    </div>`;
+            });
+        }
+
+        function sync() {
+            let players = JSON.parse(localStorage.getItem('room_' + roomCode) || "[]");
+            let my = { name: pName, score: score, time: Date.now() };
+            let idx = players.findIndex(p => p.name === pName);
+            if(idx > -1) players[idx] = my; else players.push(my);
+            players = players.filter(p => Date.now() - p.time < 5000);
+            localStorage.setItem('room_' + roomCode, JSON.stringify(players));
+            const lb = document.getElementById('lb');
+            lb.innerHTML = "";
+            players.sort((a,b) => b.score - a.score).forEach(p => {
+                lb.innerHTML += `<div class="p-item ${p.name === pName ? 'me' : ''}">${p.name.substring(0,5)}<br>${format(p.score)}</div>`;
+            });
+        }
+
+        function updateUI() {
+            document.getElementById('score-val').innerText = format(score);
+            document.getElementById('rb-txt').innerText = "LEVEL ASCENSÃO: " + rb;
+            
+            const rbCost = Math.pow(10, 5 + rb);
+            const rbBtn = document.getElementById('quick-rb-btn');
+            rbBtn.classList.toggle('ready', score >= rbCost);
+            rbBtn.innerText = "REBIRTH: " + format(rbCost);
+
+            upgrades.forEach((u, i) => {
+                const el = document.getElementById(`up-${i}`);
+                if(el) el.classList.toggle('ready', score >= getCost(u, i));
+            });
+        }
+
+        function format(n) {
+            if(n >= 1e12) return (n/1e12).toFixed(1) + "T";
+            if(n >= 1e9) return (n/1e9).toFixed(1) + "B";
+            if(n >= 1e6) return (n/1e6).toFixed(1) + "M";
+            if(n >= 1e3) return (n/1e3).toFixed(1) + "K";
+            return Math.floor(n);
+        }
+    </script>
+</body>
+</html>
