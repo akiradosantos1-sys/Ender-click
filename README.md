@@ -23,6 +23,4 @@ Prepare-se para o vício supremo! O EnderClick não é apenas um jogo,
 📱 DISPONÍVEL AGORA PARA ANDROID (APK) E WEB!
 ▬▬▬ [ ACESSE JÁ E COMECE A CLICAR! ] ▬▬▬
 
-https://25739e45-5bb1-4790-8a2b-648ba54065d0-00-3d35zf7e49uak.spock.replit.dev/
-
-https://848d0c81-2ec9-4b95-b90a-74bc8cc623b6-00-1ux8j39ex88w.riker.replit.dev/
+https://github.com/akiradosantos1-sys/Ender-click/releases/tag/EnderClick
